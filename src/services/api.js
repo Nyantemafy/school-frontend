@@ -95,4 +95,16 @@ export default {
       };
       return api.post('/upload', formData, { ...defaultConfig, ...config });
     },
+
+    getRecentGrades: (params = {}) => {
+      return api.get('/grades/recent', { params });
+    },
+
+    getGrades: (params = {}) => {
+      return api.get('/grades', { params });
+    },
+
+    deleteGrade: (id) => {
+        return api.delete(`/grades/${id}`);
+    }
 }
