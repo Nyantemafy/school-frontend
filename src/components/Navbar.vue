@@ -140,7 +140,7 @@
                             </li>
                             
                             <li v-if="isAdmin || isTeacher">
-                                <router-link to="/dashboard" class="dropdown-item py-3">
+                                <router-link to="/" class="dropdown-item py-3">
                                     <i class="bi bi-speedometer2 me-3 text-primary"></i>
                                     <span>Tableau de bord</span>
                                 </router-link>
