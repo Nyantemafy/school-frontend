@@ -366,14 +366,91 @@
                 </div>
             </div>
         </div>
+
+        <!-- Modal Détails de la note -->
+        <div class="modal fade" id="gradeDetailsModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Détails de la note</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body" v-if="selectedGrade">
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-3">Informations de l'évaluation</h6>
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="student-avatar bg-primary bg-opacity-10 text-primary rounded-circle p-3 me-3">
+                                    <i class="bi bi-journal-text fs-4"></i>
+                                </div>
+                                <div>
+                                    <h5 class="mb-1">{{ selectedGrade.course?.name || 'N/A' }}</h5>
+                                    <div class="text-muted small">
+                                        <span class="me-3">Type: {{ selectedGrade.exam_type || 'N/A' }}</span>
+                                        <span>Date: {{ formatDate(selectedGrade.exam_date) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-2 h-100">
+                                    <h6 class="text-muted mb-2">Note obtenue</h6>
+                                    <div class="d-flex align-items-center">
+                                        <div class="grade-badge me-3" :class="getGradeClass(selectedGrade.grade)">
+                                            {{ parseFloat(selectedGrade.grade).toFixed(2) }}/20
+                                        </div>
+                                        <div>
+                                            <div class="fw-medium">{{ getGradeStatus(selectedGrade.grade) }}</div>
+                                            <small class="text-muted">Coef. {{ selectedGrade.course?.coefficient || '1' }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3 border rounded-2 h-100">
+                                    <h6 class="text-muted mb-2">Détails</h6>
+                                    <div>
+                                        <div class="mb-2">
+                                            <small class="text-muted d-block">Enseignant</small>
+                                            <div class="fw-medium">{{ selectedGrade.course?.teacher?.user?.name || 'Non assigné' }}</div>
+                                        </div>
+                                        <div>
+                                            <small class="text-muted d-block">Moyenne de la classe</small>
+                                            <div class="fw-medium">{{ selectedGrade.class_average ? selectedGrade.class_average.toFixed(2) + '/20' : 'N/A' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div v-if="selectedGrade.comment" class="mb-3">
+                            <h6 class="text-muted mb-2">Commentaires</h6>
+                            <div class="p-3 bg-light rounded-2">
+                                {{ selectedGrade.comment }}
+                            </div>
+                        </div>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fermer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
+import { Modal } from 'bootstrap'
+import 'bootstrap/dist/css/bootstrap.min.css'
+import 'bootstrap'
 
 const route = useRoute()
+const selectedGrade = ref(null)
+let gradeDetailsModal = null
 
 // Configuration de la pagination
 const itemsPerPage = ref(5)
@@ -452,6 +529,20 @@ const lowGrades = computed(() => {
     return grades.value.filter(g => g.grade < 10).length
 })
 
+// Dans votre fonction qui charge les notes
+const loadGrades = async () => {
+    try {
+        const response = await api.get(`/api/students/${studentId.value}/grades`, {
+            params: {
+                with: 'course,student,course.teacher.user' // Inclure les relations nécessaires
+            }
+        })
+        grades.value = response.data
+    } catch (error) {
+        console.error('Erreur lors du chargement des notes:', error)
+    }
+}
+
 const groupedByCourse = computed(() => {
     const groups = {}
     
@@ -490,8 +581,18 @@ const filterByType = (type) => {
 }
 
 const viewGradeDetails = (grade) => {
-    // Implémentez l'action pour voir les détails de la note
-    console.log('Détails de la note:', grade)
+    selectedGrade.value = grade
+    if (!gradeDetailsModal) {
+        const modalElement = document.getElementById('gradeDetailsModal')
+        if (modalElement) {
+            gradeDetailsModal = new Modal(modalElement)
+        }
+    }
+    if (gradeDetailsModal) {
+        gradeDetailsModal.show()
+    } else {
+        console.error('Impossible d\'initialiser la modale')
+    }
 }
 
 const getGradeClass = (grade) => {
@@ -599,6 +700,11 @@ const loadInitialData = async () => {
 // Lifecycle
 onMounted(() => {
     loadInitialData()
+
+    const modalElement = document.getElementById('gradeDetailsModal')
+    if (modalElement) {
+        gradeDetailsModal = new Modal(modalElement)
+    }
 })
 
 // Assurez-vous que le composant API est correctement importé
@@ -664,6 +770,65 @@ import api from '../../services/api'
     align-items: center;
     padding: 0.5rem 0;
     border-bottom: 1px solid #f1f5f9;
+}
+
+/* Styles pour la modale */
+.modal-content {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.modal-header {
+    border-bottom: 1px solid #f0f0f0;
+    padding: 1.25rem 1.5rem;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid #f0f0f0;
+    padding: 1rem 1.5rem;
+}
+
+/* Animation de la modale */
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal.fade .modal-dialog {
+    animation: modalFadeIn 0.3s ease-out;
+}
+
+/* Badge de note */
+.grade-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 600;
+    color: white;
+    min-width: 80px;
+}
+
+/* Style pour les avatars */
+.student-avatar {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
 }
 
 .student-info .info-item:last-child {
