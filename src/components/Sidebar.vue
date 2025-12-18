@@ -145,15 +145,23 @@
                 </div>
                 
                 <div class="d-grid gap-2">
-                    <button class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center py-2" v-if="isTeacher || isAdmin">
+                    <router-link 
+                        to="/courses/create" 
+                        class="btn btn-outline-primary btn-sm d-flex align-items-center justify-content-center py-2" 
+                        v-if="isTeacher || isAdmin"
+                    >
                         <i class="bi bi-plus-circle me-2"></i>
                         <span>Nouveau cours</span>
-                    </button>
+                    </router-link>
                     
-                    <button class="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center py-2" v-if="isAdmin">
+                    <router-link 
+                        to="/reports" 
+                        class="btn btn-outline-success btn-sm d-flex align-items-center justify-content-center py-2" 
+                        v-if="isAdmin"
+                    >
                         <i class="bi bi-file-earmark-plus me-2"></i>
                         <span>Générer rapport</span>
-                    </button>
+                    </router-link>
                 </div>
             </div>
         </div>

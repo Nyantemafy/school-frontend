@@ -52,9 +52,10 @@ export default {
 
     // Users & Settings
     updateUserSettings: (data) => api.put('/user/settings', data),
-    updateNotificationSettings: (data) => api.put('/user/notifications', data),
-    updateSystemSettings: (data) => api.put('/admin/settings', data),
+    updateNotificationSettings: (data) => api.put('/user/notification-settings', data),
+    updateSystemSettings: (data) => api.put('/system-settings', data),
     getUserSettings: () => api.get('/user/settings'),
+    getUsersByRole: (role) => api.get(`/users/role/${role}`),
     uploadAvatar: (formData) => api.post('/user/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'

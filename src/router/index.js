@@ -38,9 +38,15 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: '/settings',
+                path: '/admin/settings',
                 name: 'Settings',
                 component: () => import('../views/Settings/Settings.vue'),
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/admin/users',
+                name: 'Admin',
+                component: () => import('../views/Admin/UserManagement.vue'),
                 meta: { requiresAuth: true }
             },
             {
@@ -63,7 +69,14 @@ const routes = [
             {
                 path: '/courses',
                 name: 'Courses',
-                component: () => import('../views/Courses/CourseList.vue')
+                component: () => import('../views/Courses/CourseList.vue'),
+                meta: { roles: ['admin', 'teacher'] }
+            },
+            {
+                path: '/courses/create',
+                name: 'CreateCourse',
+                component: () => import('../views/Courses/CreateCourse.vue'),
+                meta: { roles: ['admin', 'teacher'] }
             },
             {
                 path: '/schedule',
