@@ -1,26 +1,30 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'http://localhost:8000/api',
-    headers: {
-        'Content-Type': 'application/json'
-    }
+  baseURL: 'http://localhost:8000/api',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  }
 })
 
 api.interceptors.request.use(config => {
-    const token = localStorage.getItem('token')
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`
-    }
-    return config
+  const token = localStorage.getItem('token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
 })
 
 api.interceptors.response.use(
-    response => response,
+    response => {
+      console.log('Réponse API:', response.config.url, response.data);
+      return response;
+    },
     error => {
         if (error.response?.status === 401) {
-        localStorage.removeItem('token')
-        window.location.href = '/login'
+            localStorage.removeItem('token')
+            return Promise.reject(error)
         }
         return Promise.reject(error)
     }
@@ -46,7 +50,16 @@ export default {
     updateSchedule: (id, data) => api.put(`/schedules/${id}`, data),
     deleteSchedule: (id) => api.delete(`/schedules/${id}`),
 
-    // Users
+    // Users & Settings
+    updateUserSettings: (data) => api.put('/user/settings', data),
+    updateNotificationSettings: (data) => api.put('/user/notifications', data),
+    updateSystemSettings: (data) => api.put('/admin/settings', data),
+    getUserSettings: () => api.get('/user/settings'),
+    uploadAvatar: (formData) => api.post('/user/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    }),
     getUsers: () => api.get('/users'),
     createUser: (data) => api.post('/users', data),
     updateUser: (id, data) => api.put(`/users/${id}`, data),
@@ -55,11 +68,31 @@ export default {
 
     // Teachers
     getTeachers: () => api.get('/teachers'),
+    getTeacher: (id) => api.get(`/teachers/${id}`),
     createTeacher: (data) => api.post('/teachers', data),
+    updateTeacher: (id, data) => api.put(`/teachers/${id}`, data),
+    deleteTeacher: (id) => api.delete(`/teachers/${id}`),
 
     // Courses
     getCourses: () => api.get('/courses'),
     createCourse: (data) => api.post('/courses', data),
     updateCourse: (id, data) => api.put(`/courses/${id}`, data),
     deleteCourse: (id) => api.delete(`/courses/${id}`),
+    
+    // File uploads
+    uploadFile: (formData, config = {}) => {
+      const defaultConfig = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          ...(config.headers || {})
+        },
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          if (config.onUploadProgress) {
+            config.onUploadProgress(percentCompleted);
+          }
+        }
+      };
+      return api.post('/upload', formData, { ...defaultConfig, ...config });
+    },
 }
